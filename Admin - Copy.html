@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Santri - Data Santri</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles for a modern, clean dark mode UI */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #d1d5db; /* text-gray-300 */
+        }
+
+        .card {
+            background-color: #1f2937; /* bg-gray-800 */
+            border: 1px solid #374151; /* border-gray-700 */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap; /* Prevent text wrapping in table cells */
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            text-align: left;
+            border-bottom: 1px solid #374151; /* border-gray-700 */
+        }
+
+        .admin-table th {
+            background-color: #374151; /* bg-gray-700 */
+            font-weight: 600; /* font-semibold */
+            color: #f9fafb; /* text-gray-50 */
+            font-size: 0.75rem; /* text-xs */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .admin-table tbody tr:hover {
+            background-color: #2b3546; /* Slightly lighter than card bg */
+        }
+
+        .admin-table td {
+            color: #d1d5db; /* text-gray-300 */
+        }
+        
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Form elements */
+        .form-input, .form-select {
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: #f9fafb; /* text-gray-50 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.625rem 1rem; /* py-2.5 px-4 */
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af; /* placeholder-gray-400 */
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* hover:bg-blue-700 */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* bg-red-500 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* hover:bg-red-600 */
+        }
+        .btn-icon {
+             background-color: transparent;
+             padding: 0.5rem;
+        }
+        .btn-icon:hover {
+            background-color: #374151; /* hover:bg-gray-700 */
+        }
+        .btn-secondary {
+            background-color: #4b5563; /* bg-gray-600 */
+            color: white;
+            border-color: #4b5563;
+        }
+        .btn-secondary:hover {
+            background-color: #6b7280; /* hover:bg-gray-500 */
+        }
+
+        /* Tab Navigation */
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: #9ca3af; /* text-gray-400 */
+            transition: all 0.2s;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .tab-btn:hover {
+            color: #f9fafb; /* hover:text-gray-50 */
+        }
+        .tab-btn.active {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-backdrop.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #1f2937; /* bg-gray-800 */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 400px;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        .modal-backdrop.visible .modal-content {
+            transform: scale(1);
+        }
+        #manageStudentsModal .modal-content {
+            max-width: 700px;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background-color: #374151;
+            border-radius: 0.5rem;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white">Panel Admin Santri</h1>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Data Submissions -->
+        <div class="lg:col-span-2">
+            <div class="card h-full">
+                <div class="p-6">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                        <h2 class="text-xl font-semibold text-white">Submisi Formulir Terbaru</h2>
+                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <select id="submissionMonthFilter" class="form-select text-sm">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                            <select id="formTypeFilter" class="form-select text-sm">
+                                <option value="">Semua Tipe Form</option>
+                                <option value="form1">Data Santri</option>
+                                <option value="form2">Tasmi'</option>
+                                <option value="form3">Halaqoh</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="adminDataTableWrapper" class="table-wrapper">
+                        <div id="adminDataTableLoader">
+                            <div class="space-y-2">
+                                <div class="h-10 skeleton w-full"></div>
+                                <div class="h-10 skeleton w-full"></div>
+                                <div class="h-10 skeleton w-full"></div>
+                                <div class="h-10 skeleton w-full"></div>
+                            </div>
+                        </div>
+                        <div id="adminDataTable"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Management -->
+        <div class="lg:col-span-1">
+            <div class="card">
+                <div class="p-4 border-b border-gray-700">
+                     <div class="flex flex-wrap bg-gray-900 rounded-lg p-1 gap-1 text-sm">
+                        <button id="showMentorsTabBtn" class="tab-btn active">Pembimbing</button>
+                        <button id="showStudentsTabBtn" class="tab-btn">Santri</button>
+                        <button id="showClassesTabBtn" class="tab-btn">Kelas</button>
+                        <button id="showHalaqohGroupsTabBtn" class="tab-btn">Grup Halaqoh</button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <!-- Mentors Content -->
+                    <div id="mentorsContent" class="admin-tab-content space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3">Tambah Pembimbing Baru</h3>
+                            <form id="addMentorForm" class="flex items-center gap-2">
+                                <input type="text" id="mentorName" name="mentorName" placeholder="Nama Pembimbing" required class="form-input">
+                                <button type="submit" class="btn btn-primary !p-2.5">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3 mt-6">Daftar Pembimbing</h3>
+                            <div id="mentorsList" class="space-y-2">
+                                <div class="h-8 skeleton w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Students Content -->
+                    <div id="studentsContent" class="admin-tab-content hidden space-y-6">
+                         <div>
+                            <h3 class="text-lg font-semibold text-white mb-3">Tambah Santri Baru</h3>
+                            <form id="addStudentForm" class="space-y-3">
+                                <input type="text" id="studentName" name="studentName" placeholder="Nama Santri" required class="form-input">
+                                <select id="studentClassSelect" name="studentClass" required class="form-select">
+                                    <option value="">Memuat kelas...</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary w-full">
+                                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>Tambah Santri
+                                </button>
+                            </form>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold text-white mb-3">Daftar Santri</h3>
+                            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                                <select id="studentListClassFilter" class="form-select text-sm flex-grow">
+                                    <option value="">Semua Kelas</option>
+                                </select>
+                                <button id="bulkDeleteStudentsBtn" class="btn btn-danger hidden">
+                                    <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i>
+                                    <span id="bulkDeleteCount"></span>
+                                </button>
+                            </div>
+                            <div id="studentsList" class="space-y-2">
+                                <div class="h-8 skeleton w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Classes Content -->
+                    <div id="classesContent" class="admin-tab-content hidden space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3">Tambah Kelas Baru</h3>
+                            <form id="addClassForm" class="flex items-center gap-2">
+                                <input type="text" id="className" name="className" placeholder="Nama Kelas (e.g., 1A)" required class="form-input">
+                                <button type="submit" class="btn btn-primary !p-2.5">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3 mt-6">Daftar Kelas</h3>
+                            <div id="classesList" class="space-y-2">
+                                <div class="h-8 skeleton w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Halaqoh Groups Content -->
+                    <div id="halaqohGroupsContent" class="admin-tab-content hidden space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3">Jadikan Pembimbing Grup</h3>
+                            <form id="addHalaqohGroupForm" class="space-y-3">
+                                <select id="halaqohGroupMentorSelect" required class="form-select">
+                                    <option value="">Pilih Pembimbing untuk dijadikan grup</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary w-full">
+                                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>Jadikan Grup
+                                </button>
+                            </form>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-3 mt-6">Daftar Grup Halaqoh</h3>
+                            <div class="mb-4">
+                                <input type="text" id="groupSearchInput" placeholder="Cari nama pembimbing..." class="form-input">
+                            </div>
+                            <div id="halaqohGroupsList" class="space-y-4">
+                                <div class="h-24 skeleton w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Toast Message -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
+        <p id="toastMessage"></p>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-backdrop">
+        <div class="modal-content text-center">
+            <div class="flex justify-center mb-4">
+                <div class="bg-red-200 p-3 rounded-full">
+                    <i data-lucide="trash-2" class="w-8 h-8 text-red-600"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Konfirmasi Penghapusan</h3>
+            <p class="text-gray-400 mb-6">Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelDeleteBtn" class="btn btn-secondary w-full">Batal</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger w-full">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Students Modal -->
+    <div id="manageStudentsModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white" id="manageStudentsModalTitle">Kelola Santri</h3>
+                <button id="closeManageStudentsModalBtn" class="btn btn-icon">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+                <!-- All Students Column -->
+                <div>
+                    <h4 class="font-semibold mb-2">Santri Tersedia</h4>
+                    <div class="flex flex-col sm:flex-row gap-2 mb-2">
+                        <select id="modalClassFilter" class="form-select !p-2 text-sm flex-grow">
+                            <option value="">Semua Kelas</option>
+                        </select>
+                        <input type="text" id="modalStudentSearch" placeholder="Cari nama..." class="form-input !p-2 text-sm flex-grow">
+                    </div>
+                    <div id="allStudentsListForModal" class="space-y-2 p-2 bg-gray-900 rounded-lg h-full overflow-y-auto">
+                        <p class="text-gray-400 text-sm">Memuat...</p>
+                    </div>
+                </div>
+                <!-- Group Students Column -->
+                <div>
+                    <h4 class="font-semibold mb-2">Santri dalam Grup</h4>
+                    <div id="groupStudentsListForModal" class="space-y-2 p-2 bg-gray-900 rounded-lg h-full overflow-y-auto">
+                         <p class="text-gray-400 text-sm">Pilih santri untuk ditambahkan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal-backdrop">
+        <div class="modal-content">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">Edit Santri</h3>
+                <button id="closeEditStudentModalBtn" class="btn btn-icon">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="editStudentForm" class="space-y-4">
+                <input type="hidden" id="editStudentId">
+                <div>
+                    <label for="editStudentName" class="block text-sm font-medium text-gray-300 mb-1">Nama Santri</label>
+                    <input type="text" id="editStudentName" required class="form-input">
+                </div>
+                <div>
+                    <label for="editStudentClass" class="block text-sm font-medium text-gray-300 mb-1">Kelas</label>
+                    <select id="editStudentClass" required class="form-select"></select>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancelEditStudentBtn" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Submission Modal -->
+    <div id="editSubmissionModal" class="modal-backdrop">
+        <div class="modal-content">
+             <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">Edit Submisi</h3>
+                <button id="closeEditSubmissionModalBtn" class="btn btn-icon">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="editSubmissionForm" class="space-y-4">
+                <input type="hidden" id="editSubmissionId">
+                
+                <!-- Fields for Form 1 -->
+                <div id="edit-form1-fields" class="hidden space-y-3">
+                    <div>
+                        <label for="edit-f1-totalHafalan1" class="block text-sm font-medium text-gray-300 mb-1">Total Hafalan</label>
+                        <input type="text" id="edit-f1-totalHafalan1" placeholder="Total Hafalan" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f1-hafalanTerakhir1" class="block text-sm font-medium text-gray-300 mb-1">Hafalan Terakhir</label>
+                        <input type="text" id="edit-f1-hafalanTerakhir1" placeholder="Hafalan Terakhir" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f1-ziyadahPages1" class="block text-sm font-medium text-gray-300 mb-1">Halaman Ziyadah</label>
+                        <input type="number" id="edit-f1-ziyadahPages1" placeholder="Halaman Ziyadah" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f1-murojaahPages1" class="block text-sm font-medium text-gray-300 mb-1">Halaman Murojaah</label>
+                        <input type="number" id="edit-f1-murojaahPages1" placeholder="Halaman Murojaah" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f1-nilaiItqon1" class="block text-sm font-medium text-gray-300 mb-1">Nilai Itqon</label>
+                        <input type="number" id="edit-f1-nilaiItqon1" placeholder="Nilai Itqon" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f1-nilaiTajwid1" class="block text-sm font-medium text-gray-300 mb-1">Nilai Tajwid</label>
+                        <input type="number" id="edit-f1-nilaiTajwid1" placeholder="Nilai Tajwid" class="form-input">
+                    </div>
+                </div>
+                
+                <!-- Fields for Form 2 -->
+                <div id="edit-form2-fields" class="hidden space-y-3">
+                    <div>
+                        <label for="edit-f2-jumlahHafalanTasmi" class="block text-sm font-medium text-gray-300 mb-1">Jumlah Hafalan Tasmi'</label>
+                        <input type="text" id="edit-f2-jumlahHafalanTasmi" placeholder="Jumlah Hafalan Tasmi'" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit-f2-keteranganTasmi" class="block text-sm font-medium text-gray-300 mb-1">Keterangan</label>
+                        <select id="edit-f2-keteranganTasmi" class="form-select">
+                            <option value="">Pilih Keterangan</option>
+                            <option value="sangat_kurang">Sangat Kurang</option>
+                            <option value="kurang">Kurang</option>
+                            <option value="bagus">Bagus</option>
+                            <option value="bagus_sekali">Bagus Sekali</option>
+                            <option value="sempurna">Sempurna</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fields for Form 3 -->
+                <div id="edit-form3-fields" class="hidden space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Kehadiran</label>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center"><input type="radio" name="edit-f3-kehadiranHalaqoh" value="hadir" class="form-radio"><span class="ml-2">Hadir</span></label>
+                            <label class="flex items-center"><input type="radio" name="edit-f3-kehadiranHalaqoh" value="alpha" class="form-radio"><span class="ml-2">Alpha</span></label>
+                            <label class="flex items-center"><input type="radio" name="edit-f3-kehadiranHalaqoh" value="sakit" class="form-radio"><span class="ml-2">Sakit</span></label>
+                            <label class="flex items-center"><input type="radio" name="edit-f3-kehadiranHalaqoh" value="izin" class="form-radio"><span class="ml-2">Izin</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancelEditSubmissionBtn" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, deleteDoc, doc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, writeBatch, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBzvOsp5EVnzTI8Kbew9nXSXXLpakBD6Ec",
+            authDomain: "ltq-hn.firebaseapp.com",
+            projectId: "ltq-hn",
+            storageBucket: "ltq-hn.appspot.com",
+            messagingSenderId: "542731528480",
+            appId: "1:542731528480:web:15203f68716ed2e3dacf45"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // --- Global State & Unsubscribe Listeners ---
+        let currentUserId = null;
+        let unsubscribes = {};
+        let deleteInfo = { docId: null, collectionName: null, isBulk: false, ids: [] };
+        let allMentors = [];
+        let allStudents = [];
+        let allClasses = [];
+        let allHalaqohGroups = [];
+        let unsubscribeFormSubmissions = null;
+
+        // --- DOM Element References ---
+        const dom = {
+            adminDataTable: document.getElementById('adminDataTable'),
+            adminDataTableLoader: document.getElementById('adminDataTableLoader'),
+            submissionMonthFilter: document.getElementById('submissionMonthFilter'),
+            formTypeFilter: document.getElementById('formTypeFilter'),
+            mentorsList: document.getElementById('mentorsList'),
+            studentsList: document.getElementById('studentsList'),
+            classesList: document.getElementById('classesList'),
+            halaqohGroupsList: document.getElementById('halaqohGroupsList'),
+            studentClassSelect: document.getElementById('studentClassSelect'),
+            halaqohGroupMentorSelect: document.getElementById('halaqohGroupMentorSelect'),
+            addMentorForm: document.getElementById('addMentorForm'),
+            addStudentForm: document.getElementById('addStudentForm'),
+            addClassForm: document.getElementById('addClassForm'),
+            addHalaqohGroupForm: document.getElementById('addHalaqohGroupForm'),
+            deleteModal: document.getElementById('deleteModal'),
+            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+            cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+            manageStudentsModal: document.getElementById('manageStudentsModal'),
+            closeManageStudentsModalBtn: document.getElementById('closeManageStudentsModalBtn'),
+            manageStudentsModalTitle: document.getElementById('manageStudentsModalTitle'),
+            allStudentsListForModal: document.getElementById('allStudentsListForModal'),
+            groupStudentsListForModal: document.getElementById('groupStudentsListForModal'),
+            modalClassFilter: document.getElementById('modalClassFilter'),
+            modalStudentSearch: document.getElementById('modalStudentSearch'),
+            studentListClassFilter: document.getElementById('studentListClassFilter'),
+            bulkDeleteStudentsBtn: document.getElementById('bulkDeleteStudentsBtn'),
+            bulkDeleteCount: document.getElementById('bulkDeleteCount'),
+            editStudentModal: document.getElementById('editStudentModal'),
+            editStudentForm: document.getElementById('editStudentForm'),
+            editStudentId: document.getElementById('editStudentId'),
+            editStudentName: document.getElementById('editStudentName'),
+            editStudentClass: document.getElementById('editStudentClass'),
+            closeEditStudentModalBtn: document.getElementById('closeEditStudentModalBtn'),
+            cancelEditStudentBtn: document.getElementById('cancelEditStudentBtn'),
+            editSubmissionModal: document.getElementById('editSubmissionModal'),
+            editSubmissionForm: document.getElementById('editSubmissionForm'),
+            editSubmissionId: document.getElementById('editSubmissionId'),
+            closeEditSubmissionModalBtn: document.getElementById('closeEditSubmissionModalBtn'),
+            cancelEditSubmissionBtn: document.getElementById('cancelEditSubmissionBtn'),
+            groupSearchInput: document.getElementById('groupSearchInput'),
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toastMessage'),
+        };
+
+        const allManagementTabs = document.querySelectorAll('.admin-tab-content');
+        const allManagementTabBtns = document.querySelectorAll('.tab-btn');
+
+        // --- FUNCTION DECLARATIONS ---
+
+        function showToast(message, isError = false) {
+            dom.toastMessage.textContent = message;
+            dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            setTimeout(() => {
+                dom.toast.className = dom.toast.className.replace('translate-y-0 opacity-100', 'translate-y-20 opacity-0');
+            }, 3000);
+        }
+
+        function openDeleteModal(docId, collectionName) {
+            deleteInfo = { docId, collectionName, isBulk: false, ids: [] };
+            dom.deleteModal.classList.add('visible');
+        }
+
+        function closeDeleteModal() {
+            dom.deleteModal.classList.remove('visible');
+            deleteInfo = { docId: null, collectionName: null, isBulk: false, ids: [] };
+        }
+        
+        function showLoading(element) {
+            if (element) element.style.display = 'block';
+        }
+
+        function hideLoading(element) {
+             if (element) element.style.display = 'none';
+        }
+
+        function populateSubmissionMonthFilter() {
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const now = new Date();
+            dom.submissionMonthFilter.innerHTML = '<option value="">Semua Bulan</option>';
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const option = document.createElement('option');
+                option.value = `${year}-${month + 1}`;
+                option.textContent = `${months[month]} ${year}`;
+                dom.submissionMonthFilter.appendChild(option);
+            }
+        }
+
+        function fetchAdminData() {
+            const formTypeFilter = dom.formTypeFilter.value;
+            const monthFilter = dom.submissionMonthFilter.value;
+
+            if (!currentUserId) return;
+            if (unsubscribeFormSubmissions) unsubscribeFormSubmissions();
+            
+            showLoading(dom.adminDataTableLoader);
+            dom.adminDataTable.innerHTML = '';
+
+            const submissionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'formSubmissions');
+            let q;
+
+            if (monthFilter) {
+                const [year, month] = monthFilter.split('-').map(Number);
+                const startDate = Timestamp.fromDate(new Date(year, month - 1, 1));
+                const endDate = Timestamp.fromDate(new Date(year, month, 0, 23, 59, 59));
+                if (formTypeFilter) {
+                    q = query(submissionsRef, where('formType', '==', formTypeFilter), where('timestamp', '>=', startDate), where('timestamp', '<=', endDate));
+                } else {
+                    q = query(submissionsRef, where('timestamp', '>=', startDate), where('timestamp', '<=', endDate));
+                }
+            } else {
+                if (formTypeFilter) {
+                    q = query(submissionsRef, where('formType', '==', formTypeFilter));
+                } else {
+                    q = query(submissionsRef);
+                }
+            }
+
+            unsubscribeFormSubmissions = onSnapshot(q, (snapshot) => {
+                hideLoading(dom.adminDataTableLoader);
+                
+                let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                docs.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
+
+                if (docs.length === 0) {
+                    dom.adminDataTable.innerHTML = `<p class="text-center text-gray-400 py-8">Tidak ada data untuk filter ini.</p>`;
+                    return;
+                }
+                
+                const headers = new Set();
+                docs.forEach(data => Object.keys(data).forEach(key => headers.add(key)));
+
+                const formTypeNames = { 'form1': 'Data Santri', 'form2': 'Tasmi\'', 'form3': 'Halaqoh' };
+                const consolidatedHeaders = [
+                    { display: 'Tipe', sources: ['formType'] },
+                    { display: 'Pembimbing', sources: ['namaPembimbing1', 'namaPembimbing2', 'namaPembimbingHalaqoh'] },
+                    { display: 'Santri', sources: ['namaSantri1', 'namaSantri2', 'namaSantri3'] },
+                    { display: 'Waktu Kirim', sources: ['timestamp'] },
+                    { display: 'Aksi', sources: [] }
+                ];
+
+                let tableHTML = `<table class="admin-table"><thead><tr>`;
+                consolidatedHeaders.forEach(h => tableHTML += `<th>${h.display}</th>`);
+                tableHTML += `</tr></thead><tbody>`;
+
+                docs.forEach(doc => {
+                    const data = doc;
+                    tableHTML += `<tr>`;
+                    consolidatedHeaders.forEach(h => {
+                        if (h.display === 'Aksi') {
+                            tableHTML += `
+                                <td class="flex items-center gap-1">
+                                    <button class="btn btn-icon !p-1 btn-edit-submission" data-id="${data.id}" data-submission='${JSON.stringify(data)}'>
+                                        <i data-lucide="edit" class="w-4 h-4 text-blue-400"></i>
+                                    </button>
+                                    <button class="btn btn-icon !p-1 btn-delete" data-id="${data.id}" data-collection="formSubmissions">
+                                        <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
+                                    </button>
+                                </td>`;
+                        } else {
+                            let value = h.sources.map(s => data[s]).find(v => v !== undefined && v !== null && v !== '') || '-';
+                            if (h.display === 'Waktu Kirim' && value.toDate) value = value.toDate().toLocaleString('id-ID');
+                            if (h.display === 'Tipe') value = formTypeNames[value] || value;
+                            tableHTML += `<td>${value}</td>`;
+                        }
+                    });
+                    tableHTML += `</tr>`;
+                });
+
+                tableHTML += `</tbody></table>`;
+                dom.adminDataTable.innerHTML = tableHTML;
+                lucide.createIcons();
+            }, (error) => {
+                console.error("Error fetching admin data:", error);
+                hideLoading(dom.adminDataTableLoader);
+                showToast("Gagal memuat data submisi.", true);
+            });
+        }
+        
+        function createListRenderer(config) {
+            if (unsubscribes[config.collectionName]) unsubscribes[config.collectionName]();
+
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', config.collectionName), orderBy('name'));
+            unsubscribes[config.collectionName] = onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    config.listElement.innerHTML = `<p class="text-center text-gray-400 py-4">Belum ada data.</p>`;
+                    if (config.onLoad) config.onLoad([]);
+                    return;
+                }
+                
+                const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                config.listElement.innerHTML = items.map(item => `
+                    <div class="flex items-center justify-between bg-gray-700 p-2 rounded-lg">
+                        <p class="text-white font-medium">${item.name} ${item.class ? `<span class="text-xs text-gray-400 ml-2">${item.class}</span>` : ''}</p>
+                        <button class="btn btn-icon btn-delete" data-id="${item.id}" data-collection="${config.collectionName}">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
+                        </button>
+                    </div>
+                `).join('');
+                
+                if (config.onLoad) config.onLoad(items);
+                lucide.createIcons();
+            }, (error) => {
+                console.error(`Error fetching ${config.collectionName}:`, error);
+                showToast(`Gagal memuat ${config.collectionName}.`, true);
+                config.listElement.innerHTML = `<p class="text-red-400">Gagal memuat data.</p>`;
+            });
+        }
+
+        function renderStudentList() {
+            const classFilter = dom.studentListClassFilter.value;
+            const listElement = dom.studentsList;
+            
+            let studentsToRender = allStudents;
+            if (classFilter) {
+                studentsToRender = allStudents.filter(s => s.class === classFilter);
+            }
+
+            if (studentsToRender.length === 0) {
+                listElement.innerHTML = `<p class="text-center text-gray-400 py-4">Tidak ada santri di kelas ini.</p>`;
+                dom.bulkDeleteStudentsBtn.classList.add('hidden');
+                return;
+            }
+            
+            listElement.innerHTML = `
+                <div class="flex items-center justify-between bg-gray-800 p-2 rounded-lg mb-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold">
+                        <input type="checkbox" id="selectAllStudents" class="form-checkbox bg-gray-700 border-gray-600 rounded">
+                        Pilih Semua
+                    </label>
+                </div>
+                <div class="space-y-2">
+                ${studentsToRender.map(item => `
+                    <div class="flex items-center justify-between bg-gray-700 p-2 rounded-lg">
+                        <label class="flex items-center gap-3 flex-grow">
+                            <input type="checkbox" class="student-checkbox form-checkbox bg-gray-700 border-gray-600 rounded" data-id="${item.id}">
+                            <span class="text-white font-medium">${item.name}</span>
+                            <span class="text-xs text-gray-400">${item.class}</span>
+                        </label>
+                        <div class="flex items-center">
+                            <button class="btn btn-icon !p-1 btn-edit-student" data-id="${item.id}" data-name="${item.name}" data-class="${item.class}">
+                                <i data-lucide="edit" class="w-4 h-4 text-blue-400"></i>
+                            </button>
+                            <button class="btn btn-icon !p-1 btn-delete" data-id="${item.id}" data-collection="students">
+                                <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+            addStudentListEventListeners();
+        }
+
+        function addStudentListEventListeners() {
+            const selectAllCheckbox = document.getElementById('selectAllStudents');
+            const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+
+            function updateBulkDeleteButton() {
+                const selectedCount = document.querySelectorAll('.student-checkbox:checked').length;
+                if (selectedCount > 0) {
+                    dom.bulkDeleteStudentsBtn.classList.remove('hidden');
+                    dom.bulkDeleteCount.textContent = `Hapus (${selectedCount})`;
+                } else {
+                    dom.bulkDeleteStudentsBtn.classList.add('hidden');
+                }
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = selectedCount > 0 && selectedCount === studentCheckboxes.length;
+                }
+            }
+
+            selectAllCheckbox?.addEventListener('change', (e) => {
+                studentCheckboxes.forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+                updateBulkDeleteButton();
+            });
+
+            studentCheckboxes.forEach(cb => {
+                cb.addEventListener('change', updateBulkDeleteButton);
+            });
+            updateBulkDeleteButton();
+        }
+
+        function populateClassDropdowns(classes) {
+            const selects = [dom.studentClassSelect, dom.studentListClassFilter];
+            selects.forEach(selectElement => {
+                if (selectElement) {
+                    const currentValue = selectElement.value;
+                    const defaultOptionText = selectElement.id === 'studentListClassFilter' ? 'Semua Kelas' : 'Pilih Kelas';
+                    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+                    classes.forEach(cls => {
+                        const option = document.createElement('option');
+                        option.value = cls.name;
+                        option.textContent = cls.name;
+                        selectElement.appendChild(option);
+                    });
+                    if (classes.some(c => c.name === currentValue)) {
+                        selectElement.value = currentValue;
+                    }
+                }
+            });
+        }
+
+        function preloadManagementData() {
+            if (unsubscribes['allMentors']) unsubscribes['allMentors']();
+            const mentorsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'mentors'), orderBy('name'));
+            unsubscribes['allMentors'] = onSnapshot(mentorsQuery, snapshot => {
+                allMentors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                dom.halaqohGroupMentorSelect.innerHTML = '<option value="">Pilih Pembimbing</option>';
+                allMentors.forEach(mentor => {
+                    const option = document.createElement('option');
+                    option.value = mentor.id;
+                    option.textContent = mentor.name;
+                    dom.halaqohGroupMentorSelect.appendChild(option);
+                });
+            });
+
+            if (unsubscribes['allStudents']) unsubscribes['allStudents']();
+            const studentsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'students'), orderBy('name'));
+            unsubscribes['allStudents'] = onSnapshot(studentsQuery, snapshot => {
+                allStudents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStudentList();
+            });
+
+            if (unsubscribes['allClasses']) unsubscribes['allClasses']();
+            const classesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'classes'), orderBy('name'));
+            unsubscribes['allClasses'] = onSnapshot(classesQuery, snapshot => {
+                allClasses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                populateClassDropdowns(allClasses);
+                dom.modalClassFilter.innerHTML = '<option value="">Semua Kelas</option>';
+                allClasses.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.name;
+                    option.textContent = cls.name;
+                    dom.modalClassFilter.appendChild(option);
+                });
+            });
+            
+            if (unsubscribes['allHalaqohGroups']) unsubscribes['allHalaqohGroups']();
+            const groupsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'halaqohGroups'));
+            unsubscribes['allHalaqohGroups'] = onSnapshot(groupsQuery, snapshot => {
+                allHalaqohGroups = snapshot.docs.map(doc => doc.data());
+            });
+        }
+        
+        function fetchHalaqohGroups() {
+            const searchTerm = dom.groupSearchInput.value.toLowerCase();
+            
+            if (unsubscribes['halaqohGroups']) unsubscribes['halaqohGroups']();
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'halaqohGroups'), orderBy('groupName'));
+            unsubscribes['halaqohGroups'] = onSnapshot(q, (snapshot) => {
+                let groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                if (searchTerm) {
+                    groups = groups.filter(group => {
+                        const mentor = allMentors.find(m => m.id === group.mentorId);
+                        return mentor && mentor.name.toLowerCase().includes(searchTerm);
+                    });
+                }
+
+                dom.halaqohGroupsList.innerHTML = '';
+                if (groups.length === 0) {
+                    dom.halaqohGroupsList.innerHTML = `<p class="text-center text-gray-400 py-4">Tidak ada grup yang cocok.</p>`;
+                    return;
+                }
+                groups.forEach(group => {
+                    const mentor = allMentors.find(m => m.id === group.mentorId);
+                    const groupCard = document.createElement('div');
+                    groupCard.className = 'p-4 bg-gray-700 rounded-lg';
+                    groupCard.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-white">${mentor?.name || group.groupName}</h4>
+                                <p class="text-sm text-gray-400 mt-1">${group.studentIds?.length || 0} Santri</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-secondary btn-sm !px-2 manage-students-btn" data-group-id="${group.id}" data-group-name="${mentor?.name || group.groupName}">
+                                    <i data-lucide="users" class="w-4 h-4"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm !px-2 btn-delete" data-id="${group.id}" data-collection="halaqohGroups">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    dom.halaqohGroupsList.appendChild(groupCard);
+                });
+                lucide.createIcons();
+            });
+        }
+
+        function handleFormSubmit(form, collectionName, data) {
+            if (!data.name) {
+                showToast("Nama tidak boleh kosong.", true);
+                return;
+            }
+            if (!currentUserId) {
+                showToast("Autentikasi diperlukan.", true);
+                return;
+            }
+            addDoc(collection(db, 'artifacts', appId, 'public', 'data', collectionName), {
+                ...data,
+                timestamp: serverTimestamp(),
+                addedBy: currentUserId
+            }).then(() => {
+                showToast(`${collectionName.charAt(0).toUpperCase() + collectionName.slice(1, -1)} berhasil ditambahkan!`);
+                form.reset();
+            }).catch(error => {
+                console.error(`Error adding ${collectionName}:`, error);
+                showToast(`Gagal menambahkan ${collectionName.slice(0, -1)}.`, true);
+            });
+        }
+
+        let currentGroupId = null;
+        function openManageStudentsModal(groupId, groupName) {
+            currentGroupId = groupId;
+            dom.manageStudentsModalTitle.textContent = `Kelola Santri: ${groupName}`;
+            renderStudentListsForModal();
+            dom.manageStudentsModal.classList.add('visible');
+        }
+        function closeManageStudentsModal() {
+            if(unsubscribes['modalGroup']) unsubscribes['modalGroup']();
+            currentGroupId = null;
+            dom.manageStudentsModal.classList.remove('visible');
+        }
+        
+        function renderStudentListsForModal() {
+            if (!currentGroupId) return;
+
+            const classFilter = dom.modalClassFilter.value;
+            const searchTerm = dom.modalStudentSearch.value.toLowerCase();
+
+            const groupRef = doc(db, 'artifacts', appId, 'public', 'data', 'halaqohGroups', currentGroupId);
+            
+            if(unsubscribes['modalGroup']) unsubscribes['modalGroup']();
+            unsubscribes['modalGroup'] = onSnapshot(groupRef, (docSnap) => {
+                const groupStudentIds = docSnap.data()?.studentIds || [];
+                
+                const groupStudents = allStudents.filter(s => groupStudentIds.includes(s.id));
+                dom.groupStudentsListForModal.innerHTML = groupStudents.map(student => `
+                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                        <span>${student.name}</span>
+                        <button class="btn btn-icon !p-1 remove-student-btn" data-student-id="${student.id}">
+                            <i data-lucide="x-circle" class="w-4 h-4 text-red-400"></i>
+                        </button>
+                    </div>
+                `).join('') || '<p class="text-gray-400 text-sm">Tidak ada santri di grup ini.</p>';
+
+                const allAssignedStudentIds = new Set(allHalaqohGroups.flatMap(g => g.studentIds || []));
+                let availableStudents = allStudents.filter(s => !allAssignedStudentIds.has(s.id));
+
+                if (classFilter) {
+                    availableStudents = availableStudents.filter(s => s.class === classFilter);
+                }
+                if (searchTerm) {
+                    availableStudents = availableStudents.filter(s => s.name.toLowerCase().includes(searchTerm));
+                }
+
+                 dom.allStudentsListForModal.innerHTML = availableStudents.map(student => `
+                    <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+                        <span>${student.name}</span>
+                        <button class="btn btn-icon !p-1 add-student-btn" data-student-id="${student.id}">
+                            <i data-lucide="plus-circle" class="w-4 h-4 text-green-400"></i>
+                        </button>
+                    </div>
+                `).join('') || '<p class="text-gray-400 text-sm">Tidak ada santri yang tersedia atau semua sudah masuk grup.</p>';
+
+                lucide.createIcons();
+            });
+        }
+
+        function openEditStudentModal(id, name, currentClass) {
+            dom.editStudentId.value = id;
+            dom.editStudentName.value = name;
+            
+            dom.editStudentClass.innerHTML = '';
+            allClasses.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.name;
+                option.textContent = cls.name;
+                if (cls.name === currentClass) {
+                    option.selected = true;
+                }
+                dom.editStudentClass.appendChild(option);
+            });
+
+            dom.editStudentModal.classList.add('visible');
+        }
+
+        function closeEditStudentModal() {
+            dom.editStudentModal.classList.remove('visible');
+        }
+
+        function openEditSubmissionModal(submissionId, submissionData) {
+            dom.editSubmissionId.value = submissionId;
+
+            document.getElementById('edit-form1-fields').classList.add('hidden');
+            document.getElementById('edit-form2-fields').classList.add('hidden');
+            document.getElementById('edit-form3-fields').classList.add('hidden');
+
+            const formType = submissionData.formType;
+            if (formType === 'form1') {
+                const fields = document.getElementById('edit-form1-fields');
+                fields.classList.remove('hidden');
+                fields.querySelector('#edit-f1-totalHafalan1').value = submissionData.totalHafalan1 || '';
+                fields.querySelector('#edit-f1-hafalanTerakhir1').value = submissionData.hafalanTerakhir1 || '';
+                fields.querySelector('#edit-f1-ziyadahPages1').value = submissionData.ziyadahPages1 || '';
+                fields.querySelector('#edit-f1-murojaahPages1').value = submissionData.murojaahPages1 || '';
+                fields.querySelector('#edit-f1-nilaiItqon1').value = submissionData.nilaiItqon1 || '';
+                fields.querySelector('#edit-f1-nilaiTajwid1').value = submissionData.nilaiTajwid1 || '';
+            } else if (formType === 'form2') {
+                const fields = document.getElementById('edit-form2-fields');
+                fields.classList.remove('hidden');
+                fields.querySelector('#edit-f2-jumlahHafalanTasmi').value = submissionData.jumlahHafalanTasmi || '';
+                fields.querySelector('#edit-f2-keteranganTasmi').value = submissionData.keteranganTasmi || '';
+            } else if (formType === 'form3') {
+                const fields = document.getElementById('edit-form3-fields');
+                fields.classList.remove('hidden');
+                const radioGroup = fields.querySelectorAll('input[name="edit-f3-kehadiranHalaqoh"]');
+                radioGroup.forEach(radio => {
+                    radio.checked = radio.value === submissionData.kehadiranHalaqoh;
+                });
+            }
+
+            dom.editSubmissionModal.classList.add('visible');
+        }
+
+        function closeEditSubmissionModal() {
+            dom.editSubmissionModal.classList.remove('visible');
+        }
+
+        function showManagementTab(contentId, buttonId) {
+            allManagementTabs.forEach(tab => tab.classList.add('hidden'));
+            allManagementTabBtns.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(contentId)?.classList.remove('hidden');
+            document.getElementById(buttonId)?.classList.add('active');
+            
+            Object.keys(unsubscribes).forEach(key => {
+                if (unsubscribes[key]) unsubscribes[key]();
+            });
+
+            preloadManagementData();
+
+            if (contentId === 'mentorsContent') createListRenderer({ listElement: dom.mentorsList, collectionName: 'mentors' });
+            if (contentId === 'studentsContent') {
+                // The rendering is now handled by the onSnapshot listener for allStudents
+            }
+            if (contentId === 'classesContent') createListRenderer({ listElement: dom.classesList, collectionName: 'classes' });
+            if (contentId === 'halaqohGroupsContent') {
+                fetchHalaqohGroups();
+            }
+        }
+        
+        // --- EVENT LISTENERS ---
+        
+        dom.studentListClassFilter.addEventListener('change', renderStudentList);
+        dom.formTypeFilter.addEventListener('change', fetchAdminData);
+        dom.submissionMonthFilter.addEventListener('change', fetchAdminData);
+        dom.groupSearchInput.addEventListener('input', fetchHalaqohGroups);
+        
+        dom.bulkDeleteStudentsBtn.addEventListener('click', () => {
+            const selectedIds = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.dataset.id);
+            if (selectedIds.length === 0) return;
+            
+            deleteInfo = {
+                docId: null,
+                collectionName: 'students',
+                isBulk: true,
+                ids: selectedIds
+            };
+            dom.deleteModal.querySelector('p').textContent = `Apakah Anda yakin ingin menghapus ${selectedIds.length} santri yang dipilih? Tindakan ini tidak dapat dibatalkan.`;
+            dom.deleteModal.classList.add('visible');
+        });
+
+        dom.confirmDeleteBtn.addEventListener('click', async () => {
+            const { collectionName, isBulk, ids, docId } = deleteInfo;
+            
+            if (isBulk) {
+                const batch = writeBatch(db);
+                ids.forEach(id => {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', collectionName, id);
+                    batch.delete(docRef);
+                });
+                try {
+                    await batch.commit();
+                    showToast(`${ids.length} item berhasil dihapus.`);
+                } catch (error) {
+                     console.error("Error bulk deleting documents:", error);
+                     showToast("Gagal menghapus item secara massal.", true);
+                }
+            } else {
+                if (!docId || !collectionName) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId));
+                    showToast("Item berhasil dihapus.");
+                } catch (error) {
+                    console.error("Error deleting document:", error);
+                    showToast("Gagal menghapus item.", true);
+                }
+            }
+            
+            closeDeleteModal();
+            dom.deleteModal.querySelector('p').textContent = `Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.`;
+        });
+
+        document.addEventListener('click', (e) => {
+            const deleteButton = e.target.closest('.btn-delete');
+            if (deleteButton) {
+                openDeleteModal(deleteButton.dataset.id, deleteButton.dataset.collection);
+            }
+            const manageBtn = e.target.closest('.manage-students-btn');
+             if (manageBtn) {
+                openManageStudentsModal(manageBtn.dataset.groupId, manageBtn.dataset.groupName);
+             }
+            const editBtn = e.target.closest('.btn-edit-student');
+            if (editBtn) {
+                openEditStudentModal(editBtn.dataset.id, editBtn.dataset.name, editBtn.dataset.class);
+            }
+            const editSubmissionBtn = e.target.closest('.btn-edit-submission');
+            if (editSubmissionBtn) {
+                const submissionData = JSON.parse(editSubmissionBtn.dataset.submission);
+                openEditSubmissionModal(editSubmissionBtn.dataset.id, submissionData);
+            }
+        });
+        
+        dom.addMentorForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(dom.addMentorForm, 'mentors', { name: dom.addMentorForm.querySelector('#mentorName').value.trim() }); });
+        dom.addClassForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(dom.addClassForm, 'classes', { name: dom.addClassForm.querySelector('#className').value.trim() }); });
+        dom.addStudentForm.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(dom.addStudentForm, 'students', { name: dom.addStudentForm.querySelector('#studentName').value.trim(), class: dom.studentClassSelect.value }); });
+        dom.addHalaqohGroupForm.addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            const select = dom.addHalaqohGroupForm.querySelector('#halaqohGroupMentorSelect');
+            const mentorId = select.value;
+            const mentorName = select.options[select.selectedIndex].text;
+            if (!mentorId) {
+                showToast("Pembimbing harus dipilih.", true);
+                return;
+            }
+            const groupExists = allHalaqohGroups.some(group => group.mentorId === mentorId);
+            if (groupExists) {
+                showToast("Pembimbing ini sudah memiliki grup.", true);
+                return;
+            }
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'halaqohGroups'), {
+                groupName: mentorName,
+                mentorId: mentorId,
+                studentIds: [],
+                createdAt: serverTimestamp()
+            });
+            showToast("Grup Halaqoh berhasil dibuat.");
+            dom.addHalaqohGroupForm.reset();
+        });
+        
+        dom.closeManageStudentsModalBtn.addEventListener('click', closeManageStudentsModal);
+        dom.cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        
+        dom.editStudentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = dom.editStudentId.value;
+            const newName = dom.editStudentName.value;
+            const newClass = dom.editStudentClass.value;
+
+            if (!id || !newName || !newClass) {
+                showToast("Semua field harus diisi.", true);
+                return;
+            }
+            
+            const studentRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', id);
+            try {
+                await updateDoc(studentRef, {
+                    name: newName,
+                    class: newClass
+                });
+                showToast("Data santri berhasil diperbarui.");
+                closeEditStudentModal();
+            } catch (error) {
+                console.error("Error updating student:", error);
+                showToast("Gagal memperbarui data santri.", true);
+            }
+        });
+        dom.closeEditStudentModalBtn.addEventListener('click', closeEditStudentModal);
+        dom.cancelEditStudentBtn.addEventListener('click', closeEditStudentModal);
+
+        dom.editSubmissionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = dom.editSubmissionId.value;
+            const form = dom.editSubmissionForm;
+            const updatedData = {};
+
+            if (!document.getElementById('edit-form1-fields').classList.contains('hidden')) {
+                updatedData.totalHafalan1 = form.querySelector('#edit-f1-totalHafalan1').value;
+                updatedData.hafalanTerakhir1 = form.querySelector('#edit-f1-hafalanTerakhir1').value;
+                updatedData.ziyadahPages1 = form.querySelector('#edit-f1-ziyadahPages1').value;
+                updatedData.murojaahPages1 = form.querySelector('#edit-f1-murojaahPages1').value;
+                updatedData.nilaiItqon1 = form.querySelector('#edit-f1-nilaiItqon1').value;
+                updatedData.nilaiTajwid1 = form.querySelector('#edit-f1-nilaiTajwid1').value;
+            } else if (!document.getElementById('edit-form2-fields').classList.contains('hidden')) {
+                updatedData.jumlahHafalanTasmi = form.querySelector('#edit-f2-jumlahHafalanTasmi').value;
+                updatedData.keteranganTasmi = form.querySelector('#edit-f2-keteranganTasmi').value;
+            } else if (!document.getElementById('edit-form3-fields').classList.contains('hidden')) {
+                const checkedRadio = form.querySelector('input[name="edit-f3-kehadiranHalaqoh"]:checked');
+                if (checkedRadio) {
+                    updatedData.kehadiranHalaqoh = checkedRadio.value;
+                }
+            }
+
+            const submissionRef = doc(db, 'artifacts', appId, 'public', 'data', 'formSubmissions', id);
+            try {
+                await updateDoc(submissionRef, updatedData);
+                showToast("Submisi berhasil diperbarui.");
+                closeEditSubmissionModal();
+            } catch (error) {
+                console.error("Error updating submission:", error);
+                showToast("Gagal memperbarui submisi.", true);
+            }
+        });
+        dom.closeEditSubmissionModalBtn.addEventListener('click', closeEditSubmissionModal);
+        dom.cancelEditSubmissionBtn.addEventListener('click', closeEditSubmissionModal);
+        
+        document.getElementById('showMentorsTabBtn').addEventListener('click', () => showManagementTab('mentorsContent', 'showMentorsTabBtn'));
+        document.getElementById('showStudentsTabBtn').addEventListener('click', () => showManagementTab('studentsContent', 'showStudentsTabBtn'));
+        document.getElementById('showClassesTabBtn').addEventListener('click', () => showManagementTab('classesContent', 'showClassesTabBtn'));
+        document.getElementById('showHalaqohGroupsTabBtn').addEventListener('click', () => showManagementTab('halaqohGroupsContent', 'showHalaqohGroupsTabBtn'));
+        dom.modalClassFilter.addEventListener('change', renderStudentListsForModal);
+        dom.modalStudentSearch.addEventListener('input', renderStudentListsForModal);
+        dom.manageStudentsModal.addEventListener('click', async (e) => {
+            if(!currentGroupId) return;
+            const groupRef = doc(db, 'artifacts', appId, 'public', 'data', 'halaqohGroups', currentGroupId);
+            const addBtn = e.target.closest('.add-student-btn');
+            if (addBtn) await updateDoc(groupRef, { studentIds: arrayUnion(addBtn.dataset.studentId) });
+            const removeBtn = e.target.closest('.remove-student-btn');
+            if (removeBtn) await updateDoc(groupRef, { studentIds: arrayRemove(removeBtn.dataset.studentId) });
+        });
+
+        // --- Authentication & Initial Load ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                populateSubmissionMonthFilter();
+                fetchAdminData();
+                showManagementTab('mentorsContent', 'showMentorsTabBtn');
+                preloadManagementData();
+            } else {
+                try {
+                    await (initialAuthToken ? signInWithCustomToken(auth, initialAuthToken) : signInAnonymously(auth));
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    showToast("Error autentikasi: " + error.message, true);
+                }
+            }
+        });
+        
+        // --- Final Setup ---
+        lucide.createIcons();
+        
+        window.addEventListener('beforeunload', () => {
+            if (unsubscribeFormSubmissions) unsubscribeFormSubmissions();
+            Object.keys(unsubscribes).forEach(key => {
+                if (unsubscribes[key]) unsubscribes[key]();
+            });
+        });
+    </script>
+</body>
+</html>
