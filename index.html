@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seting Halaqoh - Data Santri</title>
+    <title>Panel Admin Santri - Data Santri</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -231,6 +231,10 @@
                                 <option value="form3">Halaqoh</option>
                             </select>
                         </div>
+                    </div>
+                    <!-- New search input field -->
+                    <div class="mb-4">
+                        <input type="text" id="submissionSearchInput" placeholder="Cari santri, pembimbing, atau kelas..." class="form-input">
                     </div>
                     <div id="adminDataTableWrapper" class="table-wrapper">
                         <div id="adminDataTableLoader">
@@ -506,6 +510,10 @@
                             <label class="flex items-center"><input type="radio" name="edit-f3-kehadiranHalaqoh" value="izin" class="form-radio"><span class="ml-2">Izin</span></label>
                         </div>
                     </div>
+                    <div>
+                        <label for="edit-f3-keteranganTambahan" class="block text-sm font-medium text-gray-300 mb-1">Keterangan Tambahan</label>
+                        <input type="text" id="edit-f3-keteranganTambahan" placeholder="Isi jika ada keterangan tambahan" class="form-input">
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-4">
@@ -521,7 +529,7 @@
         // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, deleteDoc, doc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, writeBatch, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, deleteDoc, doc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, writeBatch, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -556,6 +564,7 @@
             adminDataTableLoader: document.getElementById('adminDataTableLoader'),
             submissionMonthFilter: document.getElementById('submissionMonthFilter'),
             formTypeFilter: document.getElementById('formTypeFilter'),
+            submissionSearchInput: document.getElementById('submissionSearchInput'), // New search input
             mentorsList: document.getElementById('mentorsList'),
             studentsList: document.getElementById('studentsList'),
             classesList: document.getElementById('classesList'),
@@ -591,6 +600,9 @@
             editSubmissionId: document.getElementById('editSubmissionId'),
             closeEditSubmissionModalBtn: document.getElementById('closeEditSubmissionModalBtn'),
             cancelEditSubmissionBtn: document.getElementById('cancelEditSubmissionBtn'),
+            editForm1Fields: document.getElementById('edit-form1-fields'),
+            editForm2Fields: document.getElementById('edit-form2-fields'),
+            editForm3Fields: document.getElementById('edit-form3-fields'),
             groupSearchInput: document.getElementById('groupSearchInput'),
             toast: document.getElementById('toast'),
             toastMessage: document.getElementById('toastMessage'),
@@ -645,6 +657,7 @@
         function fetchAdminData() {
             const formTypeFilter = dom.formTypeFilter.value;
             const monthFilter = dom.submissionMonthFilter.value;
+            const searchTerm = dom.submissionSearchInput.value.toLowerCase(); // Get search term
 
             if (!currentUserId) return;
             if (unsubscribeFormSubmissions) unsubscribeFormSubmissions();
@@ -678,20 +691,31 @@
                 let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 docs.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
 
+                // Apply client-side search filter
+                if (searchTerm) {
+                    docs = docs.filter(doc => {
+                        const mentorName = doc.namaPembimbing1 || doc.namaPembimbing2 || doc.namaPembimbingHalaqoh || '';
+                        const studentName = doc.namaSantri1 || doc.namaSantri2 || doc.namaSantri3 || '';
+                        const studentClass = allStudents.find(s => s.name === studentName)?.class || ''; // Find class by student name
+                        
+                        return mentorName.toLowerCase().includes(searchTerm) ||
+                               studentName.toLowerCase().includes(searchTerm) ||
+                               studentClass.toLowerCase().includes(searchTerm);
+                    });
+                }
+
                 if (docs.length === 0) {
                     dom.adminDataTable.innerHTML = `<p class="text-center text-gray-400 py-8">Tidak ada data untuk filter ini.</p>`;
                     return;
                 }
                 
-                const headers = new Set();
-                docs.forEach(data => Object.keys(data).forEach(key => headers.add(key)));
-
                 const formTypeNames = { 'form1': 'Data Santri', 'form2': 'Tasmi\'', 'form3': 'Halaqoh' };
                 const consolidatedHeaders = [
                     { display: 'Tipe', sources: ['formType'] },
                     { display: 'Pembimbing', sources: ['namaPembimbing1', 'namaPembimbing2', 'namaPembimbingHalaqoh'] },
                     { display: 'Santri', sources: ['namaSantri1', 'namaSantri2', 'namaSantri3'] },
                     { display: 'Waktu Kirim', sources: ['timestamp'] },
+                    { display: 'Keterangan', sources: ['keteranganTambahan'] }, // New: Keterangan for Form3
                     { display: 'Aksi', sources: [] }
                 ];
 
@@ -716,6 +740,12 @@
                         } else {
                             let value = h.sources.map(s => data[s]).find(v => v !== undefined && v !== null && v !== '') || '-';
                             if (h.display === 'Waktu Kirim' && value.toDate) value = value.toDate().toLocaleString('id-ID');
+                            // Handle 'Keterangan' specifically for form3
+                            if (h.display === 'Keterangan' && data.formType === 'form3') {
+                                value = data.keteranganTambahan || '-';
+                            } else if (h.display === 'Keterangan' && data.formType !== 'form3') {
+                                value = '-'; // Hide for other form types
+                            }
                             if (h.display === 'Tipe') value = formTypeNames[value] || value;
                             tableHTML += `<td>${value}</td>`;
                         }
@@ -1079,6 +1109,7 @@
                 radioGroup.forEach(radio => {
                     radio.checked = radio.value === submissionData.kehadiranHalaqoh;
                 });
+                fields.querySelector('#edit-f3-keteranganTambahan').value = submissionData.keteranganTambahan || ''; // Added for form3
             }
 
             dom.editSubmissionModal.classList.add('visible');
@@ -1116,6 +1147,7 @@
         dom.studentListClassFilter.addEventListener('change', renderStudentList);
         dom.formTypeFilter.addEventListener('change', fetchAdminData);
         dom.submissionMonthFilter.addEventListener('change', fetchAdminData);
+        dom.submissionSearchInput.addEventListener('input', fetchAdminData); // New: Listen for search input
         dom.groupSearchInput.addEventListener('input', fetchHalaqohGroups);
         
         dom.bulkDeleteStudentsBtn.addEventListener('click', () => {
@@ -1261,6 +1293,7 @@
                 if (checkedRadio) {
                     updatedData.kehadiranHalaqoh = checkedRadio.value;
                 }
+                updatedData.keteranganTambahan = form.querySelector('#edit-f3-keteranganTambahan').value; // Added for form3
             }
 
             const submissionRef = doc(db, 'artifacts', appId, 'public', 'data', 'formSubmissions', id);
